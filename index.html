@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>テキスト難易度調整ツール</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f7f6; /* Soft background */
+            color: #333;
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        header {
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        h1 {
+            color: #2c3e50; /* Darker heading */
+            font-size: 2.8em;
+            margin-bottom: 10px;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 6px 25px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 800px;
+            box-sizing: border-box;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            font-size: 1.05em;
+            color: #555;
+        }
+        textarea {
+            width: calc(100% - 24px); /* Adjust for padding and border */
+            height: 150px;
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            resize: vertical; /* Allow vertical resizing */
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        textarea:focus, input[type="text"]:focus {
+            border-color: #2980b9; /* Blue focus */
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(41, 128, 185, 0.2);
+        }
+
+        .radio-group {
+            margin-bottom: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            background-color: #fcfcfc;
+        }
+        .radio-group legend {
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #555;
+            padding: 0 5px;
+            margin-bottom: 10px;
+        }
+        .radio-option {
+            margin-bottom: 10px;
+        }
+        .radio-option:last-child {
+            margin-bottom: 0;
+        }
+        .radio-option input[type="radio"] {
+            margin-right: 8px;
+            transform: scale(1.2); /* ラジオボタンを少し大きく */
+        }
+        .radio-option label {
+            display: inline-block; /* チェックボックスとラベルをインラインに */
+            font-weight: normal;
+            font-size: 1rem;
+            color: #333;
+            cursor: pointer;
+        }
+
+        input[type="text"] {
+            width: calc(100% - 24px);
+            padding: 12px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .button-group {
+            text-align: center;
+            margin-top: 30px;
+        }
+        button.primary-button {
+            background-color: #28a745; /* Green button */
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 15px 30px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+        button.primary-button:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+        button.primary-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            opacity: 0.7;
+        }
+
+        .result-group {
+            margin-top: 40px;
+            position: relative; /* For copy button positioning */
+            border-top: 1px solid #e0e0e0;
+            padding-top: 30px;
+        }
+        .copy-button {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background-color: #2980b9; /* Blue copy button */
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-size: 0.95em;
+            font-weight: bold;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .copy-button:hover {
+            background-color: #216d9a;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .copy-button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            opacity: 0.7;
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0,0,0,0);
+            border: 0;
+        }
+        .status-message, .error-message, .info-message {
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 15px;
+            font-weight: bold;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: none; /* デフォルトで非表示 */
+        }
+        .status-message {
+            background-color: #d4edda; /* Light green */
+            color: #155724; /* Dark green */
+            border: 1px solid #c3e6cb;
+        }
+        .error-message {
+            background-color: #f8d7da; /* Light red */
+            color: #721c24; /* Dark red */
+            border: 1px solid #f5c6cb;
+        }
+        .info-message {
+            background-color: #cfe2ff; /* Light blue */
+            color: #055160; /* Dark blue */
+            border: 1px solid #b6d4fe;
+        }
+    </style>
+</head>
+<body>
+    <header role="banner">
+        <h1>テキスト難易度調整ツール</h1>
+    </header>
+
+    <main class="container">
+        <div class="form-group">
+            <label for="inputText">改善したいテキストを入力してください:</label>
+            <textarea id="inputText" placeholder="ここに改善したいテキストを入力してください。" aria-describedby="textInputErrorLive"></textarea>
+            <div id="textInputErrorLive" class="error-message" role="alert" aria-live="assertive"></div>
+        </div>
+
+        <fieldset class="radio-group">
+            <legend>読者層を選択してください <span class="sr-only">(必須)</span>:</legend>
+            <div class="radio-option">
+                <input type="radio" id="audienceBaby" name="audience" value="幼児向け" required>
+                <label for="audienceBaby">幼児向け</label>
+            </div>
+            <div class="radio-option">
+                <input type="radio" id="audienceElem12" name="audience" value="小学校1・2年生向け">
+                <label for="audienceElem12">小学校1・2年生向け</label>
+            </div>
+            <div class="radio-option">
+                <input type="radio" id="audienceElem34" name="audience" value="小学校3・4年生向け">
+                <label for="audienceElem34">小学校3・4年生向け</label>
+            </div>
+            <div class="radio-option">
+                <input type="radio" id="audienceElem56" name="audience" value="小学校5・6年生向け">
+                <label for="audienceElem56">小学校5・6年生向け</label>
+            </div>
+            <div class="radio-option">
+                <input type="radio" id="audienceJuniorHigh" name="audience" value="中学生向け">
+                <label for="audienceJuniorHigh">中学生向け</label>
+            </div>
+            <div class="radio-option">
+                <input type="radio" id="audienceHighSchool" name="audience" value="高校生向け">
+                <label for="audienceHighSchool">高校生向け</label>
+            </div>
+            <div id="audienceErrorLive" class="error-message" role="alert" aria-live="assertive"></div>
+        </fieldset>
+
+        <div class="form-group">
+            <label for="remarks">備考 (オプション):</label>
+            <input type="text" id="remarks" placeholder="例: カジュアルな表現にして、ですます調で">
+        </div>
+
+        <div class="button-group">
+            <button type="button" id="improveButton" class="primary-button">改善</button>
+        </div>
+
+        <div class="result-group">
+            <label for="improvedText">改善されたテキスト:</label>
+            <textarea id="improvedText" readonly aria-live="polite" aria-atomic="false"></textarea>
+            <button type="button" class="copy-button" id="copyImprovedText" disabled aria-label="改善されたテキストをコピー">コピー</button>
+        </div>
+        <div id="statusMessage" class="status-message" aria-live="polite"></div>
+    </main>
+
+    <script>
+        const inputText = document.getElementById('inputText');
+        const audienceRadios = document.querySelectorAll('input[name="audience"]');
+        const remarksInput = document.getElementById('remarks');
+        const improveButton = document.getElementById('improveButton');
+        const improvedText = document.getElementById('improvedText');
+        const copyImprovedTextButton = document.getElementById('copyImprovedText');
+
+        const textInputErrorLive = document.getElementById('textInputErrorLive');
+        const audienceErrorLive = document.getElementById('audienceErrorLive');
+        const statusMessage = document.getElementById('statusMessage');
+
+        // 提供されたAPIキーを設定
+        const API_KEY = 'AIzaSyBtnttbJx6qfEb7EPkYUlvyugZhVNj822s'; 
+
+        const copySound = new Audio('https://www.springin.org/wp-content/uploads/2022/06/%E3%83%9E%E3%82%A6%E3%82%B9%E3%82%BF%E3%82%99%E3%83%95%E3%82%99%E3%83%AB%E3%82%AF%E3%83%AA%E3%83%83%E3%82%AF.mp3');
+
+        /**
+         * メッセージをクリアする関数
+         * @param {HTMLElement} element - クリアするメッセージ要素
+         */
+        function clearMessage(element) {
+            element.textContent = '';
+            element.style.display = 'none';
+            element.classList.remove('status-message', 'error-message', 'info-message');
+        }
+
+        /**
+         * メッセージを表示し、スクリーンリーダーに読み上げさせる関数
+         * @param {string} message - 表示するメッセージ
+         * @param {HTMLElement} targetElement - メッセージを表示する要素
+         * @param {string} type - 'status', 'error', 'info'
+         * @param {HTMLElement} [focusElement=null] - メッセージ表示後にフォーカスする要素 (任意)
+         */
+        function displayMessage(message, targetElement, type = 'status', focusElement = null) {
+            // すべてのメッセージ要素を初期化
+            clearMessage(statusMessage);
+            clearMessage(textInputErrorLive);
+            clearMessage(audienceErrorLive);
+
+            targetElement.textContent = message;
+            targetElement.style.display = 'block';
+
+            if (type === 'error') {
+                targetElement.classList.add('error-message');
+                copySound.play(); // エラー時に音を鳴らす
+                console.error(`[ERROR] ${message}`);
+            } else if (type === 'info') {
+                targetElement.classList.add('info-message');
+                console.info(`[INFO] ${message}`);
+            } else {
+                targetElement.classList.add('status-message');
+                console.log(`[STATUS] ${message}`);
+            }
+
+            if (focusElement) {
+                focusElement.focus();
+            }
+        }
+
+        // improvedText の内容が空になったらコピーボタンを無効化
+        improvedText.addEventListener('input', () => {
+            if (improvedText.value.trim() === '') {
+                copyImprovedTextButton.disabled = true;
+            }
+        });
+
+        // 「改善」ボタンクリック時の処理
+        improveButton.addEventListener('click', async () => {
+            clearMessage(statusMessage); // 既存のステータスメッセージをクリア
+            clearMessage(textInputErrorLive); // 既存の入力エラーメッセージをクリア
+            clearMessage(audienceErrorLive); // 既存の読者層エラーメッセージをクリア
+
+            improvedText.value = ''; // 改善前の結果をクリア
+            copyImprovedTextButton.disabled = true; // コピーボタンを無効化
+            improveButton.disabled = true; // ボタンを無効化
+
+            const textToImprove = inputText.value.trim();
+            let selectedAudience = '';
+            for (const radio of audienceRadios) {
+                if (radio.checked) {
+                    selectedAudience = radio.value;
+                    break;
+                }
+            }
+            const remarks = remarksInput.value.trim();
+
+            if (!textToImprove) {
+                displayMessage('改善したいテキストを入力してください。', textInputErrorLive, 'error', inputText);
+                improveButton.disabled = false;
+                return;
+            }
+
+            if (!selectedAudience) {
+                displayMessage('読者層を選択してください。', audienceErrorLive, 'error', audienceRadios[0]);
+                improveButton.disabled = false;
+                return;
+            }
+
+            // APIキーがデフォルトのままか、空でないかを確認
+            if (!API_KEY || API_KEY === 'AIzaSyCm8qsF_48L6MxktoQtAAmvNZs4OwVhyEQ') { // 古いデフォルトキーもチェック
+                displayMessage('APIキーが設定されていないか、デフォルトのキーのままです。コード内のAPI_KEYを正しい値に設定してください。', statusMessage, 'error');
+                improveButton.disabled = false;
+                return;
+            }
+
+            displayMessage('テキストを改善中...', statusMessage, 'info');
+
+            // プロンプトから「改善後のテキスト:」という記述を削除
+            const prompt = `以下のテキストを${selectedAudience}に読みやすいように改善してください。表記や漢字の難易度も調整してください。
+${remarks ? `以下の点を考慮してください: ${remarks}` : ''}
+
+元のテキスト:
+「${textToImprove}」
+`; // ここでプロンプトを終える
+
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{ text: prompt }]
+                        }],
+                        generationConfig: {
+                            maxOutputTokens: 1000,
+                            temperature: 0.7,
+                            topP: 1,
+                            topK: 1
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(`APIエラー: ${response.status} ${response.statusText} - ${errorData.error ? errorData.error.message : '不明なエラー'}`);
+                }
+
+                const data = await response.json();
+                // 改善されたテキストのみを抽出
+                const resultText = data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts[0] ? data.candidates[0].content.parts[0].text.trim() : 'テキストを取得できませんでした。';
+
+                improvedText.value = resultText;
+                copyImprovedTextButton.disabled = false;
+                displayMessage('テキストの改善が完了しました！', statusMessage, 'status', improvedText);
+
+            } catch (error) {
+                console.error('テキスト改善中にエラーが発生しました:', error);
+                displayMessage(`テキストの改善に失敗しました: ${error.message}`, statusMessage, 'error');
+                improvedText.value = '改善に失敗しました。入力内容を確認するか、時間を置いて再度お試しください。';
+                copyImprovedTextButton.disabled = true;
+            } finally {
+                improveButton.disabled = false; // ボタンを再度有効化
+            }
+        });
+
+        // コピーボタンクリック時の処理
+        copyImprovedTextButton.addEventListener('click', async () => {
+            try {
+                if (improvedText.value) {
+                    await navigator.clipboard.writeText(improvedText.value);
+                    copySound.play();
+                    displayMessage('改善されたテキストをクリップボードにコピーしました！', statusMessage, 'status', copyImprovedTextButton);
+                } else {
+                    displayMessage('コピーするテキストがありません。', statusMessage, 'status', copyImprovedTextButton);
+                }
+            } catch (err) {
+                displayMessage(`コピーに失敗しました: ${err.message}`, statusMessage, 'error', copyImprovedTextButton);
+                console.error('Failed to copy: ', err);
+            }
+        });
+
+        // 初期ロード時のメッセージ
+        document.addEventListener('DOMContentLoaded', () => {
+            displayMessage('改善したいテキストを入力し、対象の読者層を選択して「改善」ボタンを押してください。', statusMessage, 'status', inputText);
+        });
+
+        // 利用可能なモデルをリストする関数（デバッグ用、通常はコメントアウト）
+        /*
+        async function listAvailableModels() {
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${API_KEY}`);
+                if (!response.ok) {
+                    throw new Error(`APIエラー: ${response.status} ${response.statusText}`);
+                }
+                const data = await response.json();
+                console.log('利用可能なGeminiモデル:', data.models);
+                // ここで data.models を見て、'generateContent' をサポートしているモデルを見つける
+                // 例: data.models.forEach(model => console.log(model.name, model.supportedGenerationMethods));
+            } catch (error) {
+                console.error('モデルリストの取得に失敗しました:', error);
+            }
+        }
+        // 必要に応じて、この関数を呼び出す
+        // listAvailableModels();
+        */
+    </script>
+</body>
+</html>
